@@ -25,6 +25,7 @@ parser* new_parser(const label_parser* lp)
   ret->lp = lp;
   ret->input = new io_buf;
   ret->output = new io_buf;
+  ret->epfd = -1; //epoll initialization
   return ret;
 }
 
@@ -93,6 +94,9 @@ void finalize_source(parser* p)
   delete p->input;
   p->output->close_files();
   delete p->output;
+#ifdef USE_EPOLL
+  close(p->epfd);
+#endif
 }
 
 void make_write_cache(size_t numbits, parser* par, string &newname, 
@@ -270,6 +274,31 @@ void parse_source_args(po::variables_map& vm, parser* par, bool quiet, size_t pa
 	  calloc_reserve(par->counts,ring_size);
 	  par->counts.end = par->counts.begin+ring_size;
 	  par->finished_count = 0;
+#ifdef USE_EPOLL
+	  //epoll setup
+	  //First make sure we initialize it only once
+	  if(par->epfd < 0)
+	    par->epfd=epoll_create(par->input->files.index());
+	  if(par->epfd < 0)
+	    {
+	      cerr << "Could not create epoll"  << endl;
+	      perror(NULL);
+	      exit(1);
+	    }
+	  par->events=(struct epoll_event*)malloc(par->input->files.index()*sizeof(struct epoll_event));
+	  par->nclosed=0;
+	  //populate epoll
+	  for(size_t j=0; j<par->input->files.index(); j++){
+	    struct epoll_event ev;
+	    int_pair ip = {par->input->files[j], j};
+	    ev.data.ptr = &ip;
+	    ev.events = EPOLLIN;
+	    if (epoll_ctl(par->epfd, EPOLL_CTL_ADD, par->input->files[j], &ev)!=0)
+	      {
+		perror(NULL);
+	      }
+	  }
+#endif
 	}
       else {
 	par->reader = read_cached_features;

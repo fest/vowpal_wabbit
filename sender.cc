@@ -1,6 +1,9 @@
 #include <pthread.h>
 #include <vector>
 #include <netdb.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include "io.h"
 #include "parse_args.h"
 #include "cache.h"
@@ -132,6 +135,11 @@ void* send_thread(void*)
               for (size_t j = 0; j < d_2; j++)
                 {
                   bufs[i][j]->flush();
+#ifdef CORKING
+                  /* corking/uncorking is not portable */
+                  int on = 0;
+                  setsockopt (global.local_prediction, SOL_TCP, TCP_CORK, &on, sizeof (on));
+#endif
                   shutdown(bufs[i][j]->files[0],SHUT_WR);
                   free(bufs[i][j]->files.begin);
                   free(bufs[i][j]->space.begin);

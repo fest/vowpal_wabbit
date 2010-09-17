@@ -51,5 +51,10 @@ int open_socket(const char* host, size_t new_id)
     }
   if (write(sd, &new_id, sizeof(new_id)) < (int)sizeof(new_id))
     cerr << "write failed!" << endl;
+#ifdef CORKING
+  /* corking/uncorking is not portable */
+  int on = 1;
+  setsockopt(sd, SOL_TCP, TCP_CORK, &on, sizeof (on));
+#endif
   return sd;
 }

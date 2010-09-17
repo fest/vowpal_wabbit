@@ -10,6 +10,7 @@ embodied in the content of this file are licensed under the BSD
 #include <fcntl.h>
 #include "v_array.h"
 #include<iostream>
+#include "timing.h"
 
 #ifndef O_LARGEFILE //for OSX
 #define O_LARGEFILE 0
@@ -78,7 +79,10 @@ class io_buf {
   void set(char *p){space.end = p;}
 
   virtual ssize_t read_file(int f, void* buf, size_t nbytes){
-    return read(f, buf, nbytes);
+    struct timeval tv=tic();
+    ssize_t r=read(f, buf, nbytes);
+    toc(&tv,&timers[IO_BUF_READ]);
+    return r;
   }
 
   size_t fill(int f) {
@@ -99,7 +103,10 @@ class io_buf {
   }
 
   virtual ssize_t write_file(int f, const void* buf, size_t nbytes){
-    return write(f, buf, nbytes);
+    struct timeval tv=tic();
+    ssize_t r=write(f, buf, nbytes);
+    toc(&tv,&timers[IO_BUF_WRITE]);
+    return r;
   }
 
   virtual void flush() {

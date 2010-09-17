@@ -8,6 +8,9 @@ embodied in the content of this file are licensed under the BSD
 #include <netdb.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include "parse_example.h"
 #include "constant.h"
 #include "sparse_dense.h"
@@ -16,6 +19,10 @@ embodied in the content of this file are licensed under the BSD
 #include "multisource.h"
 #include "simple_label.h"
 #include "delay_ring.h"
+
+#ifdef CORKING
+#define CORK_INTERVAL 42
+#endif
 
 void* gd_thread(void *in)
 {
@@ -49,8 +56,14 @@ void* gd_thread(void *in)
 	}
       else if (thread_done(thread_num))
 	{
-	  if (global.local_prediction > 0)
+	  if (global.local_prediction > 0){
+#ifdef CORKING
+	    /* corking/uncorking is not portable */
+	    int on = 0;
+	    setsockopt (global.local_prediction, SOL_TCP, TCP_CORK, &on, sizeof (on));
+#endif
 	    shutdown(global.local_prediction, SHUT_WR);
+	  }
 	  return NULL;
 	}
       else 
@@ -325,6 +338,17 @@ void local_predict(example* ec, size_t num_threads, gd_vars& vars, regressor& re
         pred.p += ec->eta_round * ec->total_sum_feat_sq;
       pred.example_number = ec->example_counter;
       send_prediction(global.local_prediction, pred);
+#ifdef CORKING
+      /* corking/uncorking is not portable */
+      if((ec->example_counter+1) % CORK_INTERVAL == 0)
+	{
+	  int on = 0;
+	  setsockopt (global.local_prediction, SOL_TCP, TCP_CORK, &on, sizeof (on));
+	  /* uncorking makes sure we immediately send so we can recork immediately */
+	  on = 1;
+	  setsockopt (global.local_prediction, SOL_TCP, TCP_CORK, &on, sizeof (on));
+	}
+#endif
       if (global.unique_id == 0)
 	{
 	  size_t len = sizeof(ld->label) + sizeof(ld->weight);

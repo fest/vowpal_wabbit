@@ -7,7 +7,7 @@ embodied in the content of this file are licensed under the BSD
 #ifndef SCE
 #define SCE
 
-
+#include <sys/epoll.h>
 #include "io.h"
 #include "global_data.h"
 #include "parse_primitives.h"
@@ -47,6 +47,10 @@ struct parser {
   size_t finished_count;//the number of finished examples;
   int label_sock;
   int max_fd;
+  int epfd; //epoll file descriptor
+  struct epoll_event* events; //epoll events buffer 
+  size_t nclosed; //how many sources are done (have closed the connection)
+  v_array<int> toofar; //list of sources which are too far ahead
 };
 
 parser* new_parser(const label_parser* lp);

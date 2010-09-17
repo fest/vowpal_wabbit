@@ -6,6 +6,7 @@ embodied in the content of this file are licensed under the BSD
 
 #include "vw.h"
 #include "gd.h"
+#include "timing.h"
 
 int main(int argc, char *argv[]) {
 	gd_vars *vars = vw(argc, argv);
@@ -27,6 +28,10 @@ int main(int argc, char *argv[]) {
 		  cerr << endl << "best constant's loss = " << constant_loss;
 		cerr << endl << "total feature number = " << global.total_features;
 		cerr << endl;
+		cerr << "time spent on different i/o calls" << endl;
+		for(unsigned int i=0; i<6; i++){
+		  cerr << tvtoldbl(&timers[i]) << endl; 
+		}
 	}
 
 	free(vars);
