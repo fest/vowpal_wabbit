@@ -36,16 +36,43 @@ learn_impl (pythonbaselearner& pbl, example& ec)
   example_ptr ecp = boost::shared_ptr<example>(&ec, dont_delete_me);
 
   py::object retval = static_cast<py::object*>(pbl.impl)->attr("learn")(ecp);
-  py::extract<float> get_float_val(retval);
-  py::extract<uint32_t> get_int_val(retval);
-  if (get_float_val.check())
-    ecp->pred.scalar = get_float_val();
-  else if (get_int_val.check())
-    ecp->pred.multiclass = get_int_val();
-  else
+
+  size_t mega = (ec.tag.size() == 0) ? lDEFAULT 
+                                     : static_cast<size_t> (ec.tag.last());
+
+  switch (mega)
     {
-      cerr << "unrecognized learn return type" << endl;
-      throw exception();
+      case lDEFAULT:
+      case lBINARY:
+        {
+          py::extract<float> get_float_val(retval);
+          if (get_float_val.check())
+            ecp->pred.scalar = get_float_val();
+          else
+            {
+              py::object pretty = retval.attr("__repr__")();
+              py::extract<std::string> get_string_val(pretty);
+              cerr << "bad (simple) return value " << get_string_val() << endl;
+              throw exception();
+            }
+        }
+
+        break;
+      default:
+        {
+          py::extract<uint32_t> get_int_val(retval);
+          if (get_int_val.check())
+              ecp->pred.multiclass = get_int_val();
+          else
+            {
+              py::object pretty = retval.attr("__repr__")();
+              py::extract<std::string> get_string_val(pretty);
+              cerr << "bad (multiclass) return value " << get_string_val() << endl;
+              throw exception();
+            }
+        }
+
+        break;
     }
 }
 
