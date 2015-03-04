@@ -8,7 +8,11 @@
 using namespace std;
 using namespace LEARNER;
 
-static void 
+namespace
+{
+  pythonbaselearner* myb;
+
+void 
 learn(pythonbaselearner& b, base_learner& unused, example& ec) {
     if(b.learn)
         b.learn(b,ec);
@@ -16,11 +20,19 @@ learn(pythonbaselearner& b, base_learner& unused, example& ec) {
         cerr<< "learn not initialized" << endl;
 }
 
-static void 
+void 
 save_load(pythonbaselearner& b, io_buf& model_file, bool read, bool text) 
 {
     if (!read && !b.all->quiet)
         cerr << "python base learner does not save (or load) a vw regressor. Use python for state"<< endl;
+}
+
+}
+
+pythonbaselearner*
+get_pythonbaselearner ()
+{
+  return myb;
 }
 
 base_learner* pythonbaselearner_setup(vw& all) 
@@ -28,14 +40,14 @@ base_learner* pythonbaselearner_setup(vw& all)
   if (missing_option(all, false, "pythonbaselearner", "python base learner")) 
     return NULL;
   
-  pythonbaselearner& b = calloc_or_die<pythonbaselearner> ();
-  b.all = &all;
+  myb = calloc_or_die<pythonbaselearner> (1);
+  myb->all = &all;
 
   if (!all.quiet) {
     cerr << "Enabling pythonbaselearner" << endl;
   }
   
-  learner<pythonbaselearner>& l = init_learner(&b, learn, 1);
+  learner<pythonbaselearner>& l = init_learner(myb, learn, 1);
   l.set_save_load(save_load);
   return make_base(l);
 }

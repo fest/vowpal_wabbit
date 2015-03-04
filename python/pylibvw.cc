@@ -50,7 +50,7 @@ learn_impl (pythonbaselearner& pbl, example& ec)
 }
 
 void set_base_learner(vw_ptr all, py::object base_learner) {
-  pythonbaselearner* pbl = (pythonbaselearner*) all->l->get_learn_fd_data();
+  pythonbaselearner* pbl = get_pythonbaselearner();
   if (pbl->impl)
     delete static_cast<py::object*> (pbl->impl);
   pbl->impl = new py::object(base_learner);

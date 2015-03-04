@@ -815,13 +815,13 @@ void parse_reductions(vw& all)
   all.reduction_stack.push_back(GD::setup);
   all.reduction_stack.push_back(kernel_svm_setup);
   all.reduction_stack.push_back(ftrl_setup);
-  all.reduction_stack.push_back(pythonbaselearner_setup);
   all.reduction_stack.push_back(sender_setup);
   all.reduction_stack.push_back(gd_mf_setup);
   all.reduction_stack.push_back(print_setup);
   all.reduction_stack.push_back(noop_setup);
   all.reduction_stack.push_back(lda_setup);
   all.reduction_stack.push_back(bfgs_setup);
+  all.reduction_stack.push_back(pythonbaselearner_setup);
 
   //Score Users
   all.reduction_stack.push_back(active_setup);

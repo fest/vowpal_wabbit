@@ -14,3 +14,4 @@ struct pythonbaselearner {
 };
 
 LEARNER::base_learner* pythonbaselearner_setup(vw& all);
+pythonbaselearner* get_pythonbaselearner ();
