@@ -85,6 +85,11 @@ namespace LEARNER
     public:
       size_t weights; //this stores the number of "weight vectors" required by the learner.
       size_t increment;
+
+      inline void* get_learn_fd_data()
+      {
+        return learn_fd.data;
+      }
       
       //called once for each example.  Must work under reduction.
       inline void learn(example& ec, size_t i=0) 

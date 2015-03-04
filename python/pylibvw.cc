@@ -5,6 +5,7 @@
 #include "../vowpalwabbit/search.h"
 #include "../vowpalwabbit/search_hooktask.h"
 #include "../vowpalwabbit/parse_example.h"
+#include "../vowpalwabbit/pythonbaselearner.h"
 #include "../vowpalwabbit/gd.h"
 
 #include <boost/make_shared.hpp>
@@ -28,6 +29,33 @@ const size_t lMAX = 5;
 
 
 void dont_delete_me(void*arg) { }
+
+static void
+learn_impl (pythonbaselearner& pbl, example& ec)
+{
+  example_ptr ecp = boost::shared_ptr<example>(&ec, dont_delete_me);
+
+  py::object retval = static_cast<py::object*>(pbl.impl)->attr("learn")(ecp);
+  py::extract<float> get_float_val(retval);
+  py::extract<uint32_t> get_int_val(retval);
+  if (get_float_val.check())
+    ecp->pred.scalar = get_float_val();
+  else if (get_int_val.check())
+    ecp->pred.multiclass = get_int_val();
+  else
+    {
+      cerr << "unrecognized learn return type" << endl;
+      throw exception();
+    }
+}
+
+void set_base_learner(vw_ptr all, py::object base_learner) {
+  pythonbaselearner* pbl = (pythonbaselearner*) all->l->get_learn_fd_data();
+  if (pbl->impl)
+    delete static_cast<py::object*> (pbl->impl);
+  pbl->impl = new py::object(base_learner);
+  pbl->learn = learn_impl;
+}
 
 vw_ptr my_initialize(string args) {
   vw*foo = VW::initialize(args);
@@ -558,6 +586,7 @@ BOOST_PYTHON_MODULE(pylibvw) {
       .def("get_weighted_examples", &get_weighted_examples, "return the total weight of examples so far")
 
       .def("get_search_ptr", &get_search_ptr, "return a pointer to the search data structure")
+      .def("set_base_learner", &set_base_learner, "use specified object as base learner")
       .def("audit_example", &my_audit_example, "print example audit information")
 
       .def_readonly("lDefault", lDEFAULT, "Default label type (whatever vw was initialized with) -- used as input to the example() initializer")

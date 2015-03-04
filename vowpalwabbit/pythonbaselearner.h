@@ -7,10 +7,10 @@ license as described in the file LICENSE.
 #include "learner.h"
 #include "global_data.h"
 
-LEARNER::base_learner* pythonbaselearner_setup(vw& all);
 struct pythonbaselearner {
-    vw* all;
-    void* impl;
-    void (*predict)(pythonbaselearner&,example&);
-    void (*learn)  (pythonbaselearner&,example&);
+  vw*    all;
+  void*  impl;
+  void (*learn)  (pythonbaselearner&,example&);
 };
+
+LEARNER::base_learner* pythonbaselearner_setup(vw& all);
