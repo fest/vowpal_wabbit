@@ -52,7 +52,7 @@ learn_impl (pythonbaselearner& pbl, example& ec)
             {
               py::object pretty = retval.attr("__repr__")();
               py::extract<std::string> get_string_val(pretty);
-              cerr << "bad (simple) return value " << get_string_val() << endl;
+              cerr << "bad (simple) return value '" << get_string_val() << "'" << endl;
               throw exception();
             }
         }
@@ -67,7 +67,7 @@ learn_impl (pythonbaselearner& pbl, example& ec)
             {
               py::object pretty = retval.attr("__repr__")();
               py::extract<std::string> get_string_val(pretty);
-              cerr << "bad (multiclass) return value " << get_string_val() << endl;
+              cerr << "bad (multiclass) return value '" << get_string_val() << "'" << endl;
               throw exception();
             }
         }

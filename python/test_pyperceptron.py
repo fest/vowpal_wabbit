@@ -19,7 +19,7 @@ class perceptron():
         for f,v in ex.iter_features():
             for j in xrange(k):
                 preds[j] += w[f%self.b,j]*v
-        yhat = np.argmax(preds)
+        yhat = int(np.argmax(preds))
         y = example.get_multiclass_label()-1
         if yhat != y:
             for f,v in ex.iter_features():
