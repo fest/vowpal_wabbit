@@ -531,6 +531,35 @@ void set_structured_predict_hook(search_ptr sch, py::object run_object, py::obje
   d->delete_run_object = &py_delete_run_object;
 }
 
+void my_release_extra_data(example_ptr ec) {
+  if (ec->python.extra)
+    {
+      py::decref(static_cast<PyObject*> (ec->python.extra));
+      ec->python.extra = 0;
+      ec->python.copy = 0;
+    }
+}
+
+static void*
+copy_extra (void *p)
+{
+  return p ? py::incref(static_cast<PyObject*> (p)) : 0;
+}
+
+void my_set_extra_data(example_ptr ec, py::object object) {
+  if (ec->python.extra)
+    py::decref(static_cast<PyObject*> (ec->python.extra));
+
+  ec->python.extra = py::incref(object.ptr());
+  ec->python.copy = copy_extra;
+}
+
+PyObject* my_get_extra_data(example_ptr ec) {
+  return (ec->python.extra) 
+           ? py::incref(static_cast<PyObject*> (ec->python.extra))
+           : py::incref(py::object().ptr());
+}
+
 void my_set_test_only(example_ptr ec, bool val) { ec->test_only = val; }
 
 bool po_exists(search_ptr sch, string arg) {
@@ -628,6 +657,10 @@ BOOST_PYTHON_MODULE(pylibvw) {
   py::class_<example, example_ptr>("example", py::no_init)
       .def("__init__", py::make_constructor(my_read_example), "Given a string as an argument parse that into a VW example (and run setup on it) -- default to multiclass label type")
       .def("__init__", py::make_constructor(my_empty_example), "Construct an empty (non setup) example; you must provide a label type (vw.lBinary, vw.lMulticlass, etc.)")
+
+      .def("release_extra_data", &my_release_extra_data, "Release reference to previously squirrel-d python object")
+      .def("set_extra_data", &my_set_extra_data, "Squirrel a (reference to a) python object away in the example.")
+      .def("get_extra_data", &my_get_extra_data, "Get a previously squirrel-d away python object.")
 
       .def("set_test_only", &my_set_test_only, "Change the test-only bit on an example")
 

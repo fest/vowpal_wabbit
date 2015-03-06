@@ -52,6 +52,11 @@ typedef union {
 struct example // core example datatype.
 {//output prediction
   polyprediction pred;
+  struct
+    {
+      void*   extra;
+      void* (*copy) (void*);
+    } python;
 
   // input fields
   polylabel l;

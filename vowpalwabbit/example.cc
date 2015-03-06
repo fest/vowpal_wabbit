@@ -72,6 +72,11 @@ void copy_example_data(bool audit, example* dst, example* src)
         }
       copy_array(dst->audit_features[i], src->audit_features[i], copy_audit_data);
     }
+
+  dst->python.extra = (src->python.copy) 
+                         ? (*src->python.copy) (src->python.extra)
+                         : src->python.extra;
+  dst->python.copy = src->python.copy;
   
   dst->num_features = src->num_features;
   dst->partial_prediction = src->partial_prediction;
