@@ -531,16 +531,23 @@ void set_structured_predict_hook(search_ptr sch, py::object run_object, py::obje
   d->delete_run_object = &py_delete_run_object;
 }
 
+void release_extra_data(void *p)
+{
+  if (p) 
+    py::decref(static_cast<PyObject*> (p));
+}
+
 void my_release_extra_data(example_ptr ec) {
   if (ec->python.extra)
     {
-      py::decref(static_cast<PyObject*> (ec->python.extra));
+      release_extra_data (ec->python.extra);
       ec->python.extra = 0;
       ec->python.copy = 0;
+      ec->python.decref = 0;
     }
 }
 
-static void*
+void*
 copy_extra (void *p)
 {
   return p ? py::incref(static_cast<PyObject*> (p)) : 0;
@@ -552,6 +559,7 @@ void my_set_extra_data(example_ptr ec, py::object object) {
 
   ec->python.extra = py::incref(object.ptr());
   ec->python.copy = copy_extra;
+  ec->python.decref = release_extra_data;
 }
 
 PyObject* my_get_extra_data(example_ptr ec) {

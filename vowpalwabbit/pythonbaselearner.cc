@@ -27,6 +27,16 @@ save_load(pythonbaselearner& b, io_buf& model_file, bool read, bool text)
         cerr << "python base learner does not save (or load) a vw regressor. Use python for state"<< endl;
 }
 
+void 
+finish_example(vw& all, pythonbaselearner& b, example& ec) {
+    if (ec.python.decref && ec.python.extra) {
+      ec.python.decref(ec.python.extra);
+      ec.python.copy = 0;
+      ec.python.decref = 0;
+      ec.python.extra = 0;
+    }
+}
+
 }
 
 pythonbaselearner*
@@ -49,5 +59,6 @@ base_learner* pythonbaselearner_setup(vw& all)
   
   learner<pythonbaselearner>& l = init_learner(myb, learn, 1);
   l.set_save_load(save_load);
+  l.set_finish_example(finish_example);
   return make_base(l);
 }

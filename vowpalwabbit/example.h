@@ -56,6 +56,7 @@ struct example // core example datatype.
     {
       void*   extra;
       void* (*copy) (void*);
+      void  (*decref) (void*);
     } python;
 
   // input fields

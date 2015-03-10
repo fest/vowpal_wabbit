@@ -77,6 +77,7 @@ void copy_example_data(bool audit, example* dst, example* src)
                          ? (*src->python.copy) (src->python.extra)
                          : src->python.extra;
   dst->python.copy = src->python.copy;
+  dst->python.decref = src->python.decref;
   
   dst->num_features = src->num_features;
   dst->partial_prediction = src->partial_prediction;
